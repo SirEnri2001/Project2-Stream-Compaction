@@ -46,6 +46,12 @@ namespace StreamCompaction {
         class PerformanceTimer
         {
         public:
+            struct TimeElapse
+            {
+                double time;
+				const char* unit;
+            };
+
             PerformanceTimer()
             {
                 cudaEventCreate(&event_start);
@@ -58,10 +64,11 @@ namespace StreamCompaction {
                 cudaEventDestroy(event_end);
             }
 
-            void startCpuTimer()
+            void startCpuTimer(bool useMicrosecs = false)
             {
                 if (cpu_timer_started) { throw std::runtime_error("CPU timer already started"); }
                 cpu_timer_started = true;
+				outputMicrosec = useMicrosecs;
 
                 time_start_cpu = std::chrono::high_resolution_clock::now();
             }
@@ -75,14 +82,18 @@ namespace StreamCompaction {
                 std::chrono::duration<double, std::milli> duro = time_end_cpu - time_start_cpu;
                 prev_elapsed_time_cpu_milliseconds =
                     static_cast<decltype(prev_elapsed_time_cpu_milliseconds)>(duro.count());
-
+                if (outputMicrosec)
+                {
+					prev_elapsed_time_cpu_milliseconds *= 1000.0f;
+                }
                 cpu_timer_started = false;
             }
 
-            void startGpuTimer()
+            void startGpuTimer(bool useMicrosecs = false)
             {
                 if (gpu_timer_started) { throw std::runtime_error("GPU timer already started"); }
                 gpu_timer_started = true;
+                outputMicrosec = useMicrosecs;
 
                 cudaEventRecord(event_start);
             }
@@ -95,18 +106,27 @@ namespace StreamCompaction {
                 if (!gpu_timer_started) { throw std::runtime_error("GPU timer not started"); }
 
                 cudaEventElapsedTime(&prev_elapsed_time_gpu_milliseconds, event_start, event_end);
+                if (outputMicrosec)
+                {
+					prev_elapsed_time_gpu_milliseconds *= 1000.0f;
+                }
                 gpu_timer_started = false;
             }
 
-            float getCpuElapsedTimeForPreviousOperation() //noexcept //(damn I need VS 2015
+            TimeElapse getCpuElapsedTimeForPreviousOperation() //noexcept //(damn I need VS 2015
             {
-                return prev_elapsed_time_cpu_milliseconds;
+                return { prev_elapsed_time_cpu_milliseconds, unit() };
             }
 
-            float getGpuElapsedTimeForPreviousOperation() //noexcept
+            TimeElapse getGpuElapsedTimeForPreviousOperation() //noexcept
             {
-                return prev_elapsed_time_gpu_milliseconds;
+                return { prev_elapsed_time_gpu_milliseconds, unit() };
             }
+
+            const char* unit()
+            {
+                return outputMicrosec ? "us" : "ms";
+			}
 
             // remove copy and move functions
             PerformanceTimer(const PerformanceTimer&) = delete;
@@ -124,6 +144,7 @@ namespace StreamCompaction {
 
             bool cpu_timer_started = false;
             bool gpu_timer_started = false;
+            bool outputMicrosec = false;
 
             float prev_elapsed_time_cpu_milliseconds = 0.f;
             float prev_elapsed_time_gpu_milliseconds = 0.f;

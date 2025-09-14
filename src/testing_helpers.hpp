@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string>
 #include <ctime>
+#include "termcolor.hpp"
 
 template<typename T>
 int cmpArrays(int n, T *a, T *b) {
@@ -23,18 +24,38 @@ void printDesc(const char *desc) {
 
 template<typename T>
 void printCmpResult(int n, T *a, T *b) {
+    bool bSucceeded = !cmpArrays(n, a, b);
+    if (bSucceeded)
+    {
+        std::cout << termcolor::green;
+    }else
+    {
+        std::cout << termcolor::red;
+    }
     printf("    %s \n",
-            cmpArrays(n, a, b) ? "FAIL VALUE" : "passed");
+       !bSucceeded ? "FAIL VALUE" : "passed");
+    std::cout << termcolor::reset;
 }
 
 template<typename T>
 void printCmpLenResult(int n, int expN, T *a, T *b) {
+	bool bSucceeded = (n != -1 && n == expN && !cmpArrays(n, a, b));
+
+    if (bSucceeded)
+    {
+        std::cout << termcolor::green;
+    }
+    else
+    {
+        std::cout << termcolor::red;
+    }
     if (n != expN) {
         printf("    expected %d elements, got %d\n", expN, n);
     }
     printf("    %s \n",
             (n == -1 || n != expN) ? "FAIL COUNT" :
             cmpArrays(n, a, b) ? "FAIL VALUE" : "passed");
+    std::cout << termcolor::reset;
 }
 
 void zeroArray(int n, int *a) {
@@ -69,8 +90,14 @@ void printArray(int n, int *a, bool abridged = false) {
     printf("]\n");
 }
 
+//template<typename T>
+//void printElapsedTime(T time, std::string note = "", const char* unit)
+//{
+//    std::cout <<"   elapsed time: " << termcolor::yellow << time << unit<< "    " << termcolor::reset << note <<  std::endl;
+//}
+
 template<typename T>
-void printElapsedTime(T time, std::string note = "")
+void printElapsedTime(T timeStruct, std::string note = "")
 {
-    std::cout << "   elapsed time: " << time << "ms    " << note << std::endl;
+    std::cout << "   elapsed time: " << termcolor::yellow << timeStruct.time << timeStruct.unit << "    " << termcolor::reset << note << std::endl;
 }

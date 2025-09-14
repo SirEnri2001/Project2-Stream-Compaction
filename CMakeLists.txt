@@ -29,6 +29,7 @@ include_directories(.)
 
 set(headers
     "src/testing_helpers.hpp"
+    "src/termcolor.hpp"
     )
 
 set(sources
