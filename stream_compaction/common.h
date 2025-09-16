@@ -9,9 +9,18 @@
 #include <algorithm>
 #include <chrono>
 #include <stdexcept>
+#include <iostream>
+
+#include "termcolor.hpp"
+
 
 #define FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 #define checkCUDAError(msg) checkCUDAErrorFn(msg, FILENAME, __LINE__)
+
+#define SCOPED_CPU_TIMER StreamCompaction::Common::ScopedCpuTimer timer##__FUNCTION__(__FUNCTION__, __LINE__);
+#define SCOPED_GPU_TIMER StreamCompaction::Common::ScopedGpuTimer timer##__FUNCTION__(__FUNCTION__, __LINE__);
+
+#define BLOCK_SIZE 1024
 
 /**
  * Check for CUDA errors; print and exit if there was a problem.
@@ -36,6 +45,66 @@ namespace StreamCompaction {
 
         __global__ void kernScatter(int n, int *odata,
                 const int *idata, const int *bools, const int *indices);
+
+        class ScopedCpuTimer
+        {
+            using time_point_t = std::chrono::high_resolution_clock::time_point;
+            time_point_t time_start_cpu;
+            time_point_t time_end_cpu;
+            std::string ScopeName;
+            int line;
+        public:
+			ScopedCpuTimer(std::string InScopeName, int lineNumber) : ScopeName(InScopeName), line(lineNumber)
+            {
+                time_start_cpu = std::chrono::high_resolution_clock::now();
+            }
+            ~ScopedCpuTimer()
+            {
+                time_end_cpu = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::milli> duro = time_end_cpu - time_start_cpu;
+				double milli = duro.count();
+                if (milli<1.0)
+                {
+					std::cout <<termcolor::blue << "[CPU] " << termcolor::reset<< ScopeName << " at line "<<line<< " took " << milli * 1000.0 << " us" << std::endl;
+                }else
+                {
+                    std::cout << termcolor::blue << "[CPU] " << termcolor::reset << ScopeName << " at line " << line << " took " << milli << " ms" << std::endl;
+                }
+			}
+        };
+
+        class ScopedGpuTimer
+        {
+        public:
+            cudaEvent_t start = nullptr;
+            cudaEvent_t stop = nullptr;
+			std::string ScopeName;
+            int line;
+			ScopedGpuTimer(std::string InScopeName, int lineNumber) : ScopeName(InScopeName), line(lineNumber)
+            {
+                cudaEventCreate(&start);
+                cudaEventCreate(&stop);
+                cudaEventRecord(start);
+            }
+            ~ScopedGpuTimer()
+            {
+                cudaEventRecord(stop);
+                cudaEventSynchronize(stop);
+                float milli = 0;
+                cudaEventElapsedTime(&milli, start, stop);
+                if (milli < 1.0)
+                {
+                    std::cout << termcolor::yellow << "[GPU] " << termcolor::reset << ScopeName << " at line " << line << " took " << milli * 1000.0 << " us" << std::endl;
+                }
+                else
+                {
+                    std::cout << termcolor::yellow << "[GPU] " << termcolor::reset << ScopeName << " at line " << line << " took " << milli << " ms" << std::endl;
+                }
+                cudaEventDestroy(start);
+                cudaEventDestroy(stop);
+			}
+        };
+
 
         /**
         * This class is used for timing the performance

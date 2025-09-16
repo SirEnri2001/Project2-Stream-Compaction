@@ -5,6 +5,7 @@ set(headers
     "efficient.h"
     "thrust.h"
     "radix.h"
+    "termcolor.hpp"
     )
 
 set(sources
