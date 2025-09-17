@@ -29,7 +29,7 @@ namespace StreamCompaction {
             int padSize = (int)pow(2.f, ilog2ceil(n));
 			dim3 gridDim((padSize + blockSize - 1) / blockSize);
 			dim3 blockDim(blockSize);
-			std::cout << "padsize " << padSize << std::endl;
+			//std::cout << "padsize " << padSize << std::endl;
 			int* device_idata = nullptr;
 			int* device_odata = nullptr;
 			cudaMalloc((void**)&device_idata, padSize * sizeof(int));

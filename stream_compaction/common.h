@@ -20,7 +20,7 @@
 #define SCOPED_CPU_TIMER StreamCompaction::Common::ScopedCpuTimer timer##__FUNCTION__(__FUNCTION__, __LINE__);
 #define SCOPED_GPU_TIMER StreamCompaction::Common::ScopedGpuTimer timer##__FUNCTION__(__FUNCTION__, __LINE__);
 
-#define BLOCK_SIZE 1024
+#define BLOCK_SIZE 128
 
 /**
  * Check for CUDA errors; print and exit if there was a problem.

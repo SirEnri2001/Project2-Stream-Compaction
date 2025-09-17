@@ -95,14 +95,14 @@ namespace StreamCompaction {
             cudaMemset(device_odata, 0, paddedSize * sizeof(int));
             cudaMemset(device_idata, 0, paddedSize * sizeof(int));
 
+            cudaMemcpy(device_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
+            cudaMemcpy(device_odata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
             checkCUDAError("cuda init scan");
             {
                 SCOPED_GPU_TIMER
-                cudaMemcpy(device_idata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
-                cudaMemcpy(device_odata, idata, n * sizeof(int), cudaMemcpyHostToDevice);
                 scanDevice(paddedSize, device_odata, device_idata);
-                cudaMemcpy(odata, device_odata, n * sizeof(int), cudaMemcpyDeviceToHost);
             }
+            cudaMemcpy(odata, device_odata, n * sizeof(int), cudaMemcpyDeviceToHost);
         }
     }
 
