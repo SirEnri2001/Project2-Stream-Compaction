@@ -8,6 +8,8 @@ CUDA Stream Compaction
   * https://www.linkedin.com/in/henry-han-a832a6284/
 * Tested on: Windows 11 Pro 24H2, i7-9750H @ 2.60GHz 16GB, RTX 2070 Max-Q
 
+**Modified CMakeLists.txt**
+
 # Extra Credit
 
 - Completed Radix Sort & Testing
